@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Self-monitoring
+  - job_name: 'prometheus-2'
+    static_configs:
+      - targets: ['localhost:9091']
+
+  # Robot services scraping
+  - job_name: 'robots'
+    static_configs:
+      - targets: 
+          - 'robot-service:5000'
+          - 'robot-service-2:5000'
+          - 'robot-service-3:5000'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+# Remote write to Prometheus 1
+remote_write:
+  - url: "http://prometheus-1:9090/api/v1/write"
+    queue_config:
+      max_samples_per_send: 1000
+      max_shards: 200
+      capacity: 2500

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .robot-details {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .detail-item {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .label {
+            font-weight: bold;
+            color: #495057;
+            display: inline-block;
+            width: 80px;
+        }
+        .value {
+            color: #212529;
+        }
+        .status {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Robot Service</h1>
+        <div class="robot-details">
+            <p><strong>I am robot and following are my details.</strong></p>
+            <div class="detail-item">
+                <span class="label">ID:</span>
+                <span class="value">{{ robot.id }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Version:</span>
+                <span class="value">{{ robot.version }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Status:</span>
+                <span class="value status">{{ robot.status }}</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
