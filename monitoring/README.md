@@ -243,7 +243,7 @@ curl -s http://localhost:9090/api/v1/query?query=robot_health_status
 - **Robot Services**: Flask-based with Prometheus metrics
 - **Data Flow**: Prometheus 2 → Prometheus 1 → Grafana
 - **Scaling**: Static configuration for known robot count
-- **Dashboard**: Auto-provisioned with 4 monitoring panels
+- **Dashboard**: Auto-provisioned with 3 monitoring panels
 
 ---
 *This monitoring setup provides comprehensive observability for robot fleet management with real-time health monitoring, metrics collection, and visualization capabilities.*
