@@ -4,7 +4,7 @@ set -e
 
 # Configuration
 GHCR_REGISTRY="ghcr.io"
-LOCAL_REGISTRY="localhost:5003"
+LOCAL_REGISTRY="localhost:5000"
 REPOSITORY_NAME="${GITHUB_REPOSITORY:-iam-jawad/devops-assessment}"
 IMAGE_NAME="robot-app"
 FULL_IMAGE_NAME="${GHCR_REGISTRY}/${REPOSITORY_NAME}/${IMAGE_NAME}"

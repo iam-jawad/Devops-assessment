@@ -16,7 +16,7 @@ scrape_configs:
   - job_name: 'robots'
     static_configs:
       - targets: 
-          - 'robot-service:5000'
+          - 'robot-service-1:5000'
           - 'robot-service-2:5000'
           - 'robot-service-3:5000'
     metrics_path: '/metrics'

@@ -19,7 +19,7 @@ log "Docker daemon is ready"
 
 # Wait for local registry to be available
 log "Waiting for local registry to be available..."
-while ! curl -f http://localhost:5003/v2/ >/dev/null 2>&1; do
+while ! curl -f http://localhost:5000/v2/ >/dev/null 2>&1; do
     log "Local registry not ready, waiting..."
     sleep 10
 done

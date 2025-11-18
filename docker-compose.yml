@@ -5,9 +5,9 @@ services:
     build:
       context: ./robot
       dockerfile: Dockerfile
-    container_name: robot-service
+    container_name: robot-service-1
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       - ROBOT_ID=1
       - APP_VERSION=1.0.0
@@ -30,7 +30,7 @@ services:
       dockerfile: Dockerfile
     container_name: robot-service-2
     ports:
-      - "5001:5000"
+      - "5002:5000"
     environment:
       - ROBOT_ID=2
       - APP_VERSION=1.0.0
@@ -53,7 +53,7 @@ services:
       dockerfile: Dockerfile
     container_name: robot-service-3
     ports:
-      - "5002:5000"
+      - "5003:5000"
     environment:
       - ROBOT_ID=3
       - APP_VERSION=1.0.0
@@ -134,7 +134,7 @@ services:
     image: registry:2.8
     container_name: local-registry
     ports:
-      - "5003:5000"
+      - "5000:5000"
     volumes:
       - registry-data:/var/lib/registry
     environment:

@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": 1,
   "links": [],
   "panels": [
     {
@@ -92,7 +92,9 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum(robot_health_status) by (robot_id)",
+          "exemplar": false,
+          "expr": "label_replace(\n  up{job=\"robots\"},\n  \"robot_id\", \"$1\",\n  \"instance\", \"robot-service-([0-9]+):5000\"\n)",
+          "instant": false,
           "legendFormat": "Robot {{robot_id}}",
           "range": true,
           "refId": "A"
@@ -159,7 +161,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "max by (instance, robot_id, status, version) (last_over_time(robot_info[5m]))",
+          "expr": "max by (instance, robot_id, status, version) (robot_info)",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -303,5 +305,5 @@
   "timezone": "browser",
   "title": "Robot Metrics Dashboard",
   "uid": "robot-metrics",
-  "version": 5
+  "version": 1
 }
