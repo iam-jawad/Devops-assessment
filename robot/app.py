@@ -12,20 +12,6 @@ robot_requests_total = Counter('robot_requests_total', 'Total HTTP requests', ['
 robot_version = Gauge('robot_version', 'Robot version information', ['robot_id', 'version'])
 
 def get_app_version():
-    """Get version from Docker image label or fallback to default"""
-    try:
-        # Try to get version from Docker image label
-        result = subprocess.run([
-            'docker', 'inspect', '--format={{index .Config.Labels "version"}}', 
-            os.environ.get('HOSTNAME', 'unknown')
-        ], capture_output=True, text=True, timeout=5)
-        
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
-    except Exception:
-        pass
-    
-    # Fallback to environment variable or default
     return os.environ.get('APP_VERSION', '1.0.0')
 
 def get_container_status():
