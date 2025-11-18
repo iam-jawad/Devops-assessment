@@ -13,7 +13,26 @@ This GitHub workflow automatically builds, signs, and deploys the robot applicat
 
 ## Required Setup
 
-No external secrets required! The workflow uses GitHub's built-in authentication for GHCR.
+### GitHub Container Registry (GHCR) Setup
+
+1. **Enable GHCR for your repository:**
+   - Go to your repository Settings
+   - Navigate to "Actions" → "General"
+   - Under "Workflow permissions", ensure "Read and write permissions" is selected
+   - Check "Allow GitHub Actions to create and approve pull requests"
+
+2. **Enable package creation (if needed):**
+   - Go to your GitHub account/organization Settings
+   - Navigate to "Packages" in the left sidebar
+   - Ensure "Package creation" is enabled for repositories
+
+3. **Make packages public (optional):**
+   - After first successful build, go to your repository "Packages" tab
+   - Click on the created package
+   - Go to "Package settings"
+   - Change visibility to "Public" if desired
+
+No external secrets required! The workflow uses GitHub's built-in authentication.
 
 ## Workflow Triggers
 
