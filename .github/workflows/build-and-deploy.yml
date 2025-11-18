@@ -31,6 +31,10 @@ jobs:
           echo "APP_VERSION=${{ github.event.inputs.app_version }}" >> $GITHUB_OUTPUT
           echo "Using APP_VERSION: ${{ github.event.inputs.app_version }}"
 
+      - name: Set lowercase image name
+        run: |
+          echo "IMAGE_NAME_LOWER=$(echo '${{ github.repository }}/robot-app' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
@@ -53,8 +57,8 @@ jobs:
           context: ./robot
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.APP_VERSION }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:${{ env.APP_VERSION }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:latest
           build-args: |
             APP_VERSION=${{ env.APP_VERSION }}
           platforms: linux/amd64,linux/arm64
@@ -63,7 +67,7 @@ jobs:
 
       - name: Sign the published Docker image
         env:
-          TAGS: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.APP_VERSION }}
+          TAGS: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:${{ env.APP_VERSION }}
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           echo "Signing image: ${TAGS}@${DIGEST}"
@@ -71,7 +75,7 @@ jobs:
 
       - name: Verify the signed Docker image
         env:
-          TAGS: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.APP_VERSION }}
+          TAGS: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:${{ env.APP_VERSION }}
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           echo "Verifying signature for: ${TAGS}@${DIGEST}"
@@ -80,7 +84,7 @@ jobs:
       - name: Output image details
         run: |
           echo "🚀 Docker image built and pushed successfully!"
-          echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.APP_VERSION }}"
+          echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:${{ env.APP_VERSION }}"
           echo "🔐 Image digest: ${{ steps.build.outputs.digest }}"
           echo "✅ Image signed with cosign"
           echo "📝 Version: ${{ env.APP_VERSION }}"
