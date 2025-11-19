@@ -170,45 +170,9 @@ update_compose_file() {
     
     log "Updating docker-compose.robots.yml to use image: $full_image"
     
-    # Create a temporary file with the updated compose configuration
-    python3 -c "
-import re
-
-with open('$COMPOSE_FILE', 'r') as f:
-    content = f.read()
-
-# For each robot service, replace build section with image
-services = ['robot-1', 'robot-2', 'robot-3']
-for service in services:
-    # Pattern to match the service block
-    service_pattern = f'({service}:.*?)(?=\\n\\s*[a-zA-Z-]+:|\\n[a-zA-Z-]+:|$)'
-    
-    def replace_build_with_image(match):
-        service_block = match.group(1)
-        
-        # Remove build section if it exists
-        build_pattern = r'\\n\\s+build:.*?(?=\\n\\s+[a-zA-Z-]+:|\\n\\s*$|$)'
-        service_block = re.sub(build_pattern, '', service_block, flags=re.DOTALL)
-        
-        # Remove existing image line if it exists
-        image_pattern = r'\\n\\s+image:.*?\\n'
-        service_block = re.sub(image_pattern, '\\n', service_block)
-        
-        # Add image line after service name
-        lines = service_block.split('\\n')
-        result_lines = [lines[0]]  # service name line
-        result_lines.append(f'    image: $full_image')
-        result_lines.extend(lines[1:])  # rest of the service config
-        
-        return '\\n'.join(result_lines)
-    
-    content = re.sub(service_pattern, replace_build_with_image, content, flags=re.DOTALL)
-
-with open('$COMPOSE_FILE', 'w') as f:
-    f.write(content)
-" 2>/dev/null
-    
-    if [ $? -eq 0 ]; then
+    # Use sed to replace the image tags in the compose file
+    # This is simpler and more reliable than the Python approach
+    if sed -i "s|image: ${REGISTRY_URL}/${IMAGE_NAME}:.*|image: ${full_image}|g" "$COMPOSE_FILE"; then
         log_success "docker-compose.robots.yml updated successfully"
         return 0
     else
