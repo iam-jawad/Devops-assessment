@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   robot-1:
-    image: localhost:5000/robot-app:0.0.2
+    image: localhost:5000/robot-app:0.0.3
     container_name: robot-service-1
     ports:
       - "5001:5000"
@@ -22,7 +22,7 @@ services:
       - robot-network
 
   robot-2:
-    image: localhost:5000/robot-app:0.0.2
+    image: localhost:5000/robot-app:0.0.3
     container_name: robot-service-2
     ports:
       - "5002:5000"
@@ -42,7 +42,7 @@ services:
       - robot-network
 
   robot-3:
-    image: localhost:5000/robot-app:0.0.2
+    image: localhost:5000/robot-app:0.0.3
     container_name: robot-service-3
     ports:
       - "5003:5000"

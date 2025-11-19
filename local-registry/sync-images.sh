@@ -85,82 +85,28 @@ get_remote_tags() {
     echo "$filtered_tags"
 }
 
-# Function to get remote image digest
-get_remote_digest() {
+# Function to check if tag exists in local registry
+check_local_tag_exists() {
     local image="$1"
     local tag="$2"
 
-    log "Fetching digest for ${image}:${tag}"
+    log "Checking if ${image}:${tag} exists in local registry"
 
-    # Use --verbose so we always get Descriptor, even for manifest lists
-    local manifest
-    manifest=$(docker manifest inspect --verbose "${image}:${tag}" 2>/dev/null || echo "")
-
-    if [ -z "$manifest" ]; then
-        log "Failed to get manifest for ${image}:${tag}"
-        return 1
-    fi
-
-    # Try several known shapes: array/object, Descriptor, config.digest, fallback .digest
-    local digest
-    digest=$(echo "$manifest" | jq -r '
-      if type=="array" then
-        # GHCR often wraps --verbose output in an array
-        .[0].Descriptor.digest // empty
-      elif has("Descriptor") then
-        .Descriptor.digest // empty
-      elif has("config") and .config.digest != null then
-        .config.digest
-      else
-        .digest // empty
-      end
-    ')
-
-    if [ -z "$digest" ] || [ "$digest" = "null" ]; then
-        log "No digest found in manifest"
-        return 1
-    fi
-
-    echo "$digest"
-}
-
-# Function to get local image digest
-get_local_digest() {
-    local image="$1"
-    local tag="$2"
-
-    # Check if the image exists in the local registry
-    if ! docker manifest inspect --verbose "${image}:${tag}" >/dev/null 2>&1; then
-        # Not present locally
-        echo ""
+    # Check if the image exists in the local registry by trying to pull its manifest
+    # We use curl to check the registry API directly to avoid pulling the image
+    local registry_url="http://localhost:5000"
+    local image_name=$(echo "$image" | sed 's|localhost:5000/||')
+    local manifest_url="${registry_url}/v2/${image_name}/manifests/${tag}"
+    
+    # Check if manifest exists in the local registry
+    local response_code=$(curl -s -o /dev/null -w "%{http_code}" "$manifest_url" 2>/dev/null || echo "000")
+    
+    if [ "$response_code" = "200" ]; then
+        log "Tag ${tag} exists in local registry"
         return 0
-    fi
-
-    local manifest
-    manifest=$(docker manifest inspect --verbose "${image}:${tag}" 2>/dev/null || echo "")
-
-    if [ -z "$manifest" ]; then
-        echo ""
-        return 0
-    fi
-
-    local digest
-    digest=$(echo "$manifest" | jq -r '
-      if type=="array" then
-        .[0].Descriptor.digest // empty
-      elif has("Descriptor") then
-        .Descriptor.digest // empty
-      elif has("config") and .config.digest != null then
-        .config.digest
-      else
-        .digest // empty
-      end
-    ')
-
-    if [ -z "$digest" ] || [ "$digest" = "null" ]; then
-        echo ""
     else
-        echo "$digest"
+        log "Tag ${tag} does not exist in local registry (HTTP: $response_code)"
+        return 1
     fi
 }
 
@@ -247,37 +193,25 @@ sync_images() {
 
         log "Checking tag: $tag"
 
-        # Get remote digest
-        remote_digest=$(get_remote_digest "$FULL_IMAGE_NAME" "$tag")
-        if [ $? -ne 0 ] || [ -z "$remote_digest" ]; then
-            log "Could not get remote digest for $tag, skipping..."
+        # Check if tag exists locally
+        if check_local_tag_exists "$LOCAL_IMAGE_NAME" "$tag"; then
+            log "📦 Tag $tag already exists locally, skipping..."
             continue
         fi
 
-        # Get local digest
-        local_digest=$(get_local_digest "$LOCAL_IMAGE_NAME" "$tag")
+        log "🔄 Tag $tag not found locally, will sync"
 
-        log "Remote digest: $remote_digest"
-        log "Local digest: $local_digest"
-
-        # Check if we need to sync
-        if [ "$remote_digest" != "$local_digest" ]; then
-            log "🔄 New image detected for tag $tag"
-
-            # Verify signature before pulling
-            if verify_signature "$FULL_IMAGE_NAME" "$tag"; then
-                # Pull and tag the image
-                if pull_and_tag "$FULL_IMAGE_NAME" "$LOCAL_IMAGE_NAME" "$tag"; then
-                    log "✅ Successfully synchronized $tag"
-                    sync_count=$((sync_count + 1))
-                else
-                    log "❌ Failed to synchronize $tag"
-                fi
+        # Verify signature before pulling
+        if verify_signature "$FULL_IMAGE_NAME" "$tag"; then
+            # Pull and tag the image
+            if pull_and_tag "$FULL_IMAGE_NAME" "$LOCAL_IMAGE_NAME" "$tag"; then
+                log "✅ Successfully synchronized $tag"
+                sync_count=$((sync_count + 1))
             else
-                log "❌ Skipping $tag due to signature verification failure"
+                log "❌ Failed to synchronize $tag"
             fi
         else
-            log "📦 Tag $tag is already up to date"
+            log "❌ Skipping $tag due to signature verification failure"
         fi
     done <<< "$available_tags"
 
