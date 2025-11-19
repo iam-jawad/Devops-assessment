@@ -1,4 +1,4 @@
-name: Build, Sign and Push Robot App
+name: Build Robot App
 
 on:
   workflow_dispatch:

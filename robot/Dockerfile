@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
 # Build argument for app version
-ARG APP_VERSION=1.0.0
+ARG APP_VERSION=0.0.1
 ENV APP_VERSION=${APP_VERSION}
 
 # Set working directory

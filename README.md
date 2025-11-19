@@ -68,63 +68,39 @@ This project demonstrates a complete DevOps pipeline with automated deployment, 
 
 ## Quick Start
 
-### 1. Start the Complete System
-```bash
-# Start infrastructure services (persistent)
-./manage-services.sh start-infra
+**Prerequisites**: A Linux-based VM with the latest versions of Docker and Docker Compose installed.
 
-# Start robot services  
-./manage-services.sh start-robots
+1) Clone the repository and push it to your own GitHub account so that you can run workflows within it.
 
-# Or start everything at once
-./manage-services.sh start
+2) Run the `Build Robot App` workflow. This will build the image, sign it, and push it to the repository's GitHub Container Registry (GHCR).
 
-# Check status
-./manage-services.sh status
-```
+3) Update the `GITHUB_REPOSITORY` variable in the `.env` file accordingly.
 
-### 2. Access the Applications
-- **Robot Services**: 
-  - http://localhost:5001 (Robot 1)
-  - http://localhost:5002 (Robot 2)  
-  - http://localhost:5003 (Robot 3)
-- **Monitoring**:
-  - http://localhost:9090 (Prometheus 1)
-  - http://localhost:9091 (Prometheus 2)
-  - http://localhost:3000 (Grafana - admin/admin)
-- **Registry**: http://localhost:5000
+4) On the VM, run `./manage-services.sh start-infra`. This will spin up the following 5 containers on the same VM for demonstration purposes:
 
-### 3. Test Auto-Deployment
-```bash
-# Navigate to updater directory
-cd updater/
+   These two containers can be deployed anywhere on-premises or third-party cloud to serve fleet monitoring:
+   - **grafana** - Monitoring dashboard
+   - **prometheus-1** - Primary metrics storage
+   
+   The following three containers are typically deployed on a Gateway VM:
+   - **prometheus-2** - Collects metrics from robots, caches them, and pushes to main prometheus-1 when internet is available
+   - **local-registry** - Stores and serves Docker images locally
+   - **registry-sync** - Verifies and pulls images from GHCR when internet is available
+   
+   You can now access Grafana at `<VM IP>:3000` (username: admin, password: admin).
+   Navigate to the dashboard where you will see data for three dummy robots, which will show as unhealthy since we haven't started the robot services yet.
 
-# Test the deployment system
-./test-deployment.sh
+5) Check the logs of registry-sync using `docker logs registry-sync`. When you see it has successfully pulled image tags from GHCR, proceed to the next step.
 
-# Check for updates
-./deploy-helper.sh check
+6) Run `./manage-services.sh start-robots`. This will start three dummy robot services: robot-service-1, robot-service-2, and robot-service-3.
+   
+   You can now access the web pages of the dummy robot services at `<VM IP>:5001-5003`. A simple web page will display showing details about the robot firmware.
+   
+   When you return to the Grafana Dashboard, you should see all three robots online and healthy.
 
-# Check system status
-./deploy-helper.sh status
-```
+7) Run `cd updater && ./deploy-helper.sh setup`. This will set up a cron job on the VM that runs every 5 minutes to check for new robot images in the local registry. When available, it will initiate the update process for robot services. For more details, see `updater/README-deployment.md`.
 
-## System Features
-
-### High Availability
-- **Dual Prometheus Setup**: Primary and secondary Prometheus instances
-- **Multi-Robot Deployment**: Three robot service instances with load distribution
-- **Health Monitoring**: Comprehensive health checks for all components
-
-### Automation
-- **CI/CD Integration**: GitHub Actions → Local Registry → Auto Deployment
-- **Health-Based Rollbacks**: Automatic rollback on deployment failures
-- **Monitoring Integration**: Metrics collection and alerting capabilities
-
-### Container Orchestration
-- **Docker Compose**: Complete service orchestration
-- **Volume Management**: Persistent data storage for monitoring and registry
-- **Network Isolation**: Dedicated bridge network for service communication
+The entire setup and automation is now in place. Simply go to GitHub Actions and run the workflow again, this time with a different tag (e.g., 0.0.2). Once the new image is signed and pushed to GHCR, the registry sync on the gateway VM will verify and pull the image. Then the auto-updater cron job will retrieve the new tagged image from the local registry and update all robot services. You will be able to see the updated versions on the Grafana Dashboard.
 
 ## Development Workflow
 
@@ -141,26 +117,36 @@ cd updater/
 3. Monitor Prometheus for application metrics
 4. Review deployment logs for any issues
 
-### 3. Manual Operations
-```bash
-# Manual deployment
-cd updater/
-./deploy-helper.sh deploy
-
-# Monitor system
-./deploy-helper.sh monitor
-
-# Manual rollback if needed
-./deploy-helper.sh rollback
+```mermaid
+flowchart TD
+    A[Developer Makes Code Changes] --> B[Commit & Push to GitHub]
+    B --> C[GitHub Actions Triggered]
+    C --> D[Build Docker Image]
+    D --> E[Sign Image]
+    E --> F[Push to GHCR]
+    F --> G[Registry-Sync Detects New Image]
+    G --> H[Verify & Pull Image to Local Registry]
+    H --> I[Auto-Deployment Cron Job Triggered]
+    I --> J[Health Check Current Services]
+    J --> K[Deploy New Version]
+    K --> L[Post-Deployment Health Check]
+    L --> M{Health Check Pass?}
+    M -->|Yes| N[Update Successful]
+    M -->|No| O[Rollback to Previous Version]
+    O --> P[Alert & Log Error]
+    N --> Q[Update Metrics in Prometheus]
+    Q --> R[Reflect Changes in Grafana Dashboard]
+    R --> S[Deployment Complete]
+    P --> T[Manual Investigation Required]
+    
+    style A fill:#e1f5fe
+    style N fill:#c8e6c9
+    style O fill:#ffcdd2
+    style S fill:#c8e6c9
+    style T fill:#ffcdd2
 ```
 
 ## Configuration
-
-### Environment Variables
-Key configuration can be set via environment variables:
-- `GITHUB_REPOSITORY`: Repository for image synchronization
-- `GITHUB_TOKEN`: Authentication for GitHub packages
-- `APP_VERSION`: Robot application version
 
 ### Service Configuration
 - **Prometheus**: Configure scraping targets in `monitoring/prometheus*.yml`
@@ -168,43 +154,3 @@ Key configuration can be set via environment variables:
 - **Deployment**: Adjust settings in `updater/deploy-config.conf`
 - **Infrastructure Services**: Managed via `docker-compose.infrastructure.yml`
 - **Robot Services**: Managed via `docker-compose.robots.yml`
-
-## Troubleshooting
-
-### Common Issues
-1. **Services not starting**: Check `./manage-services.sh status` and service logs
-2. **Registry not accessible**: Verify port 5000 is available and infrastructure services are running
-3. **Deployment failures**: Check `updater/` logs and health endpoints
-4. **Monitoring gaps**: Verify Prometheus targets and Grafana data sources
-5. **Network issues**: Ensure robot-network is created properly
-
-### Health Checks
-```bash
-# Check all services
-./manage-services.sh status
-
-# Test individual service health
-curl http://localhost:5001/health
-curl http://localhost:5002/health  
-curl http://localhost:5003/health
-
-# Check registry
-curl http://localhost:5000/v2/_catalog
-```
-
-## Documentation
-
-- **Monitoring Setup**: See `monitoring/README.md`
-- **Registry Configuration**: See `local-registry/README.md`
-- **Auto-Deployment**: See `updater/README-deployment.md`
-
-## Architecture Benefits
-
-This setup provides:
-- **Scalability**: Easy to add more robot instances
-- **Reliability**: Health checks and automatic rollbacks
-- **Observability**: Complete monitoring and logging stack  
-- **Automation**: Hands-off deployment pipeline
-- **Maintainability**: Clear separation of concerns and documentation
-
-The system demonstrates modern DevOps practices including Infrastructure as Code, continuous deployment, monitoring, and automated recovery mechanisms.
