@@ -7,7 +7,6 @@ This directory contains an automated deployment system that monitors the local D
 - **`auto-deploy.sh`** - Main deployment script with full automation logic
 - **`deploy-helper.sh`** - User-friendly wrapper script with common commands
 - **`deploy-config.conf`** - Configuration file for deployment settings
-- **`test-deployment.sh`** - Test suite for validating the deployment system
 - **`README-deployment.md`** - This documentation file
 
 ## Features
@@ -179,10 +178,6 @@ curl http://localhost:5003/health
 
 # Manual rollback
 ./deploy-helper.sh rollback
-
-# Manual restore from backup
-cp docker-compose.yml.backup docker-compose.yml
-docker-compose down && docker-compose up -d
 ```
 
 ## Exit Codes
@@ -192,18 +187,6 @@ The deployment script uses these exit codes:
 - **0**: Success - deployment completed successfully
 - **1**: Failure - deployment failed, rollback attempted
 - **2**: Critical failure - rollback also failed, manual intervention required
-
-## Security Considerations
-
-### Network Security
-- Local registry communication over HTTP (localhost)
-- Container communication via Docker bridge network
-- Health checks use localhost endpoints
-
-### Access Control
-- Script requires Docker daemon access
-- Modify docker-compose.yml permissions
-- Log file write permissions required
 
 ## Integration with CI/CD
 
@@ -230,88 +213,3 @@ cd ../updater
 ```
 
 **Important**: The `APP_VERSION` should be baked into the image during CI build process using `--build-arg APP_VERSION=<tag>`. The docker-compose file should NOT override this with environment variables.
-
-## Troubleshooting Guide
-
-### Common Issues
-
-#### Registry Connection Failed
-```bash
-# Check registry status
-curl http://localhost:5000/v2/_catalog
-
-# Restart registry if needed
-docker-compose restart local-registry
-```
-
-#### Health Check Timeouts
-```bash
-# Increase timeout in config
-HEALTH_CHECK_TIMEOUT=300
-
-# Check container logs
-docker logs robot-service-1
-```
-
-#### Rollback Failures
-```bash
-# Manual recovery
-cp docker-compose.yml.backup docker-compose.yml
-docker-compose down --remove-orphans
-docker-compose up -d
-```
-
-#### Permission Issues
-```bash
-# Fix script permissions
-chmod +x auto-deploy.sh deploy-helper.sh
-
-# Fix log permissions
-sudo touch /var/log/auto-deploy.log
-sudo chown $USER:$USER /var/log/auto-deploy.log
-```
-
-## Best Practices
-
-1. **Test First**: Always test deployments in a staging environment
-2. **Monitor Logs**: Regularly check deployment logs for issues
-3. **Backup Strategy**: Keep multiple backup versions of docker-compose.yml
-4. **Health Checks**: Ensure all containers have proper health check endpoints
-5. **Gradual Rollout**: Consider blue-green deployment for larger environments
-6. **Monitoring**: Set up alerts for deployment failures
-7. **Documentation**: Keep deployment procedures documented and updated
-
-## Advanced Features
-
-### Custom Health Checks
-Modify the health check function for custom validation:
-```bash
-# Add custom checks in auto-deploy.sh
-check_custom_endpoint() {
-    # Add your custom health verification logic
-}
-```
-
-### Notification Integration
-Configure webhook notifications in `deploy-config.conf`:
-```bash
-ENABLE_NOTIFICATIONS=true
-WEBHOOK_URL="https://hooks.slack.com/services/..."
-```
-
-### Multi-Environment Support
-Extend for multiple environments:
-```bash
-# Use environment-specific compose files
-COMPOSE_FILE="docker-compose.${ENVIRONMENT}.yml"
-```
-
-## Support
-
-For issues with the auto-deployment system:
-1. Check the troubleshooting guide above
-2. Review deployment logs: `./deploy-helper.sh logs`
-3. Verify container health: `./deploy-helper.sh status`
-4. Test registry connectivity: `curl http://localhost:5000/v2/_catalog`
-
-Remember: The auto-deployment system is designed to be safe-first with automatic rollbacks, but always monitor deployments and have manual recovery procedures ready.

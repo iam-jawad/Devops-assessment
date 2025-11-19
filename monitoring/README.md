@@ -7,9 +7,9 @@ This document describes the complete monitoring setup for the Robot DevOps Asses
 ```mermaid
 graph TB
     subgraph "Robot Services"
-        R1[Robot 1<br/>:5000<br/>ID=1]
-        R2[Robot 2<br/>:5001<br/>ID=2]
-        R3[Robot 3<br/>:5002<br/>ID=3]
+        R1[Robot 1<br/>:5001<br/>ID=1]
+        R2[Robot 2<br/>:5002<br/>ID=2]
+        R3[Robot 3<br/>:5003<br/>ID=3]
     end
 
     subgraph "Gateway VM"
@@ -64,7 +64,7 @@ Each robot service is a containerized Flask application that:
 - **Port**: 9091
 - **Role**: Metrics collection from all robot services
 - **Scrape interval**: 10 seconds
-- **Targets**: All robot services on ports 5000-5002
+- **Targets**: All robot services on ports 5001-5003
 - **Remote write**: Forwards collected metrics to Prometheus 1
 
 ### Prometheus 1 (Storage - on any third party cloud or on premises)
@@ -79,31 +79,14 @@ Each robot service is a containerized Flask application that:
 - **Port**: 3000
 - **Credentials**: admin/admin
 - **Auto-provisioned**: Datasources and dashboards
-- **Dashboard**: "Robot Metrics Dashboard" with 4 panels
+- **Dashboard**: "Robot Metrics Dashboard" with 3 panels
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Docker and Docker Compose
-
-### Deployment
-```bash
-# Clone and navigate to project
-cd /path/to/Devops-assessment
-
-# Start all services
-docker compose up --build -d
-
-# Verify deployment
-docker ps
-```
-
-### Service Access
+## Service Access
 | Service | URL | Purpose |
 |---------|-----|---------|
-| Robot 1 | http://localhost:5000 | Robot web interface |
-| Robot 2 | http://localhost:5001 | Robot web interface |
-| Robot 3 | http://localhost:5002 | Robot web interface |
+| Robot 1 | http://localhost:5001 | Robot web interface |
+| Robot 2 | http://localhost:5002 | Robot web interface |
+| Robot 3 | http://localhost:5003 | Robot web interface |
 | Prometheus 1 | http://localhost:9090 | Metrics storage & queries |
 | Prometheus 2 | http://localhost:9091 | Metrics scraping |
 | Grafana | http://localhost:3000 | Monitoring dashboard |
@@ -153,7 +136,7 @@ robot-4:
     dockerfile: Dockerfile
   container_name: robot-service-4
   ports:
-    - "5003:5000"
+    - "5004:5000"
   environment:
     - ROBOT_ID=4
     - APP_VERSION=1.0.0
@@ -165,77 +148,10 @@ robot-4:
 - job_name: 'robots'
   static_configs:
     - targets: 
-        - 'robot-service:5000'
+        - 'robot-service-1:5000'
         - 'robot-service-2:5000'
         - 'robot-service-3:5000'
         - 'robot-service-4:5000'  # Add new robot
-```
-
-## 🔍 Monitoring Queries
-
-### Useful Prometheus Queries
-```promql
-# All healthy robots
-sum(robot_health_status)
-
-# Robot uptime per service  
-up{job="robots"}
-
-# Request rate by robot
-sum(rate(robot_requests_total[5m])) by (robot_id)
-
-# Health status by robot
-robot_health_status{robot_id="1"}
-```
-
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-**Dashboard not showing data:**
-- Check if all services are running: `docker ps`
-- Verify Prometheus targets: http://localhost:9091/targets
-- Check robot metrics: http://localhost:5000/metrics
-
-**Robots not healthy:**
-- Check container logs: `docker logs robot-service`
-- Verify health endpoint: `curl http://localhost:5000/health`
-
-**Prometheus not scraping:**
-- Restart Prometheus 2: `docker restart prometheus-2`
-- Check network connectivity between containers
-- Verify prometheus2.yml configuration
-
-### Logs Access
-```bash
-# View service logs
-docker logs robot-service
-docker logs prometheus-1  
-docker logs prometheus-2
-docker logs grafana
-
-# Follow logs in real-time
-docker logs -f robot-service
-```
-
-## 📝 Development
-
-### Adding New Metrics
-1. Update `robot/app.py` to expose new metrics
-2. Rebuild robot containers: `docker compose up --build robot`
-3. Add new panels to Grafana dashboard
-4. Update this documentation
-
-### Testing Changes
-```bash
-# Rebuild specific service
-docker compose up --build -d robot
-
-# Restart monitoring stack
-docker restart prometheus-2 grafana
-
-# Check metrics collection
-curl -s http://localhost:9090/api/v1/query?query=robot_health_status
 ```
 
 ## 🏷️ Version Information

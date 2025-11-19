@@ -7,7 +7,7 @@ on:
         description: 'Application version (e.g., 1.0.0)'
         required: true
         type: string
-        default: '1.0.0'
+        default: '0.0.1'
 
 env:
   REGISTRY: ghcr.io
