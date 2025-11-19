@@ -217,13 +217,19 @@ The auto-deploy system works with the registry-sync container:
 
 ### Manual Testing
 ```bash
-# Test with a specific tag
-docker tag robot-app:latest localhost:5000/robot-app:v1.2.3
-docker push localhost:5000/robot-app:v1.2.3
+# Build image with correct version
+cd ../robot
+docker build --build-arg APP_VERSION=1.2.3 -t localhost:5000/robot-app:1.2.3 .
+
+# Push to local registry
+docker push localhost:5000/robot-app:1.2.3
 
 # Run deployment
+cd ../updater
 ./deploy-helper.sh deploy
 ```
+
+**Important**: The `APP_VERSION` should be baked into the image during CI build process using `--build-arg APP_VERSION=<tag>`. The docker-compose file should NOT override this with environment variables.
 
 ## Troubleshooting Guide
 

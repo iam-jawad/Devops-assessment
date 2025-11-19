@@ -1,75 +1,6 @@
 version: '3.8'
 
 services:
-  robot:
-    build:
-      context: ./robot
-      dockerfile: Dockerfile
-    container_name: robot-service-1
-    ports:
-      - "5001:5000"
-    environment:
-      - ROBOT_ID=1
-      - APP_VERSION=1.0.0
-    labels:
-      - "monitoring=robot"
-      - "robot_id=1"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
-    networks:
-      - robot-network
-
-  robot-2:
-    build:
-      context: ./robot
-      dockerfile: Dockerfile
-    container_name: robot-service-2
-    ports:
-      - "5002:5000"
-    environment:
-      - ROBOT_ID=2
-      - APP_VERSION=1.0.0
-    labels:
-      - "monitoring=robot"
-      - "robot_id=2"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
-    networks:
-      - robot-network
-
-  robot-3:
-    build:
-      context: ./robot
-      dockerfile: Dockerfile
-    container_name: robot-service-3
-    ports:
-      - "5003:5000"
-    environment:
-      - ROBOT_ID=3
-      - APP_VERSION=1.0.0
-    labels:
-      - "monitoring=robot"
-      - "robot_id=3"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
-    networks:
-      - robot-network
-
   prometheus-1:
     image: prom/prometheus:latest
     container_name: prometheus-1
@@ -110,7 +41,6 @@ services:
     restart: unless-stopped
     depends_on:
       - prometheus-1
-      - robot
 
   grafana:
     image: grafana/grafana:latest

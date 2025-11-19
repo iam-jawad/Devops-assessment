@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  robot-1:
+    image: localhost:5000/robot-app:0.0.1
+    container_name: robot-service-1
+    ports:
+      - "5001:5000"
+    environment:
+      - ROBOT_ID=1
+    labels:
+      - "monitoring=robot"
+      - "robot_id=1"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - robot-network
+
+  robot-2:
+    image: localhost:5000/robot-app:0.0.1
+    container_name: robot-service-2
+    ports:
+      - "5002:5000"
+    environment:
+      - ROBOT_ID=2
+    labels:
+      - "monitoring=robot"
+      - "robot_id=2"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - robot-network
+
+  robot-3:
+    image: localhost:5000/robot-app:0.0.1
+    container_name: robot-service-3
+    ports:
+      - "5003:5000"
+    environment:
+      - ROBOT_ID=3
+    labels:
+      - "monitoring=robot"
+      - "robot_id=3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - robot-network
+
+networks:
+  robot-network:
+    name: devops-assessment_robot-network
+    external: true
